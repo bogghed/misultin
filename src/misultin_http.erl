@@ -185,6 +185,16 @@ keep_alive(_Vsn, _KA)	-> close.
 % Depending on whether the request is persistent transition back to state request to await the next request or exit.
 body(#c{sock = Sock, socket_mode = SocketMode, recv_timeout = RecvTimeout} = C, Req) ->
 	case Req#req.method of
+		'OPTIONS' ->
+			?LOG_DEBUG("OPTIONS request received",[]),
+			Close = handle_get(C, Req),
+			case Close of
+				close ->
+					% close socket
+					misultin_socket:close(Sock, SocketMode);
+				keep_alive ->
+					request(C, #req{socket = Sock, socket_mode = SocketMode, peer_addr = Req#req.peer_addr, peer_port = Req#req.peer_port, peer_cert = Req#req.peer_cert})
+			end;
 		'GET' ->
 			?LOG_DEBUG("GET request received",[]),
 			Close = handle_get(C, Req),
